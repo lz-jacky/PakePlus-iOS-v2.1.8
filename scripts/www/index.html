@@ -1,88 +1,886 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <link rel="stylesheet" href="./static/css/styles.css" />
-        <meta
-            http-equiv="Content-Security-Policy"
-            content="default-src * 'unsafe-inline' 'unsafe-eval'"
-        />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Tauri App</title>
-        <script src="./static/js/main.js"></script>
-    </head>
-    <body>
-        <main class="container">
-            <h1>Welcome to TauriMan</h1>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>本地记账 · 手机App</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-            <div class="row">
-                <a
-                    href="https://tauri.app"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <img
-                        src="./assets/tauri.svg"
-                        class="logo tauri"
-                        alt="Tauri logo"
-                    />
-                </a>
-                <a
-                    href="https://pakeplus.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <img
-                        src="https://hk.gh-proxy.org/https://github.com/Sjj1024/PakePlus/blob/main/app-icon.png"
-                        class="logo vanilla"
-                        alt="JavaScript logo"
-                    />
-                </a>
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #f5f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 12px;
+        }
+
+        /* 手机卡片容器 */
+        .phone-frame {
+            max-width: 400px;
+            width: 100%;
+            background-color: white;
+            border-radius: 36px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.12), 0 8px 20px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            padding: 20px 18px 28px;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* 状态栏 顶部仿灵动岛 */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 6px 14px;
+            font-size: 15px;
+            font-weight: 500;
+            color: #1c1e24;
+        }
+
+        .time {
+            font-weight: 600;
+        }
+
+        .battery {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 标题 + 本月总览 */
+        .header {
+            margin-bottom: 20px;
+        }
+
+        .app-title {
+            font-size: 28px;
+            font-weight: 650;
+            letter-spacing: -0.5px;
+            background: linear-gradient(145deg, #1e293b, #0f1825);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .balance-card {
+            background: #1e293b;
+            border-radius: 26px;
+            padding: 22px 20px;
+            color: white;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            margin-top: 6px;
+        }
+
+        .balance-label {
+            font-size: 15px;
+            font-weight: 400;
+            opacity: 0.8;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .balance-amount {
+            font-size: 42px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            line-height: 1.1;
+            margin-top: 4px;
+            margin-bottom: 14px;
+        }
+
+        .month-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 14px 16px;
+            border-radius: 22px;
+            margin-top: 10px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.7;
+        }
+
+        .stat-number {
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        /* 快速记账入口 */
+        .quick-add {
+            background: #f1f5f9;
+            border-radius: 40px;
+            margin: 22px 0 28px;
+            padding: 8px 8px 8px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .quick-add span {
+            font-size: 16px;
+            font-weight: 500;
+            color: #334155;
+        }
+
+        .add-btn {
+            background: #1e293b;
+            border: none;
+            color: white;
+            width: 52px;
+            height: 52px;
+            border-radius: 40px;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .add-btn:active {
+            transform: scale(0.94);
+            background: #0f172a;
+        }
+
+        /* 分类过滤器 */
+        .filter-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scrollbar-width: none;
+        }
+
+        .filter-row::-webkit-scrollbar {
+            display: none;
+        }
+
+        .filter-chip {
+            background: #f1f4f9;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 15px;
+            font-weight: 500;
+            color: #3a4a5e;
+            white-space: nowrap;
+            border: 1px solid transparent;
+            transition: all 0.1s;
+            cursor: pointer;
+        }
+
+        .filter-chip.active {
+            background: #1e293b;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* 记账列表分区 */
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin: 12px 0 10px;
+        }
+
+        .list-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #0b1a2b;
+        }
+
+        .clear-btn {
+            background: none;
+            border: none;
+            font-size: 14px;
+            color: #64748b;
+            padding: 6px 10px;
+            border-radius: 30px;
+            background: #f0f3f8;
+            cursor: pointer;
+        }
+
+        .clear-btn:active {
+            background: #dbe0e8;
+        }
+
+        /* 账单列表 */
+        .transactions-list {
+            list-style: none;
+            margin-bottom: 18px;
+            max-height: 340px;
+            overflow-y: auto;
+            padding-right: 2px;
+        }
+
+        .transactions-list li {
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 14px;
+            border-radius: 22px;
+            margin-bottom: 8px;
+            background: #f9fbfd;
+            border: 1px solid #eef2f6;
+            transition: 0.1s;
+        }
+
+        .transactions-list li:active {
+            background: #eef3f9;
+        }
+
+        .tx-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .tx-cat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 30px;
+            background: #e4eaf2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .tx-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tx-desc {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1f2a3a;
+        }
+
+        .tx-cat {
+            font-size: 14px;
+            color: #6c7a8e;
+            margin-top: 3px;
+        }
+
+        .tx-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+        }
+
+        .tx-amount {
+            font-size: 20px;
+            font-weight: 650;
+        }
+
+        .tx-amount.income {
+            color: #2b7e4b;
+        }
+
+        .tx-amount.expense {
+            color: #c83e4d;
+        }
+
+        .tx-date {
+            font-size: 12px;
+            color: #8e9daf;
+        }
+
+        .delete-tx {
+            background: transparent;
+            border: none;
+            font-size: 16px;
+            color: #b1c2d6;
+            padding: 6px 4px 6px 12px;
+            cursor: pointer;
+        }
+
+        .delete-tx:active {
+            color: #c83e4d;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px;
+            color: #94a3b8;
+            font-size: 16px;
+            background: #f9fcff;
+            border-radius: 32px;
+        }
+
+        /* 新增记账面板 (模态层) */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.2);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .drawer {
+            background: white;
+            max-width: 400px;
+            width: 100%;
+            border-radius: 40px;
+            padding: 28px 22px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.2s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .drawer h2 {
+            font-size: 26px;
+            font-weight: 650;
+            color: #1a2634;
+            margin-bottom: 24px;
+        }
+
+        .input-field {
+            margin-bottom: 22px;
+        }
+
+        .input-field label {
+            font-size: 15px;
+            font-weight: 500;
+            color: #475569;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .input-field input, .input-field select {
+            width: 100%;
+            padding: 18px 18px;
+            font-size: 17px;
+            background: #f1f5f9;
+            border: none;
+            border-radius: 30px;
+            outline: none;
+            border: 2px solid transparent;
+            transition: 0.1s;
+        }
+
+        .input-field input:focus, .input-field select:focus {
+            border-color: #1e293b;
+            background: white;
+        }
+
+        .type-toggle {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+
+        .type-btn {
+            flex: 1;
+            background: #ecf1f7;
+            border: none;
+            padding: 16px;
+            border-radius: 40px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3f55;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .type-btn.active {
+            background: #1e293b;
+            color: white;
+        }
+
+        .drawer-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 28px;
+        }
+
+        .drawer-actions button {
+            flex: 1;
+            padding: 18px;
+            border: none;
+            border-radius: 40px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            background: #eef2f6;
+            color: #2e405b;
+        }
+
+        .drawer-actions button.primary {
+            background: #1e293b;
+            color: white;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        .drawer-actions button:active {
+            transform: scale(0.97);
+        }
+
+        /* 简单动画 */
+        .footer-note {
+            text-align: center;
+            font-size: 12px;
+            color: #aab9ce;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="phone-frame">
+    <!-- 仿状态栏 -->
+    <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="battery">
+            <span>📶</span><span>📶</span><span>🔋 87%</span>
+        </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="header">
+        <div class="app-title">💰 本地记账</div>
+        <div class="balance-card" id="balanceCard">
+            <div class="balance-label"><span>💳</span> 当前可用</div>
+            <div class="balance-amount" id="totalBalance">0.00</div>
+            <div class="month-stats">
+                <div class="stat-item">
+                    <span class="stat-label">本月收入</span>
+                    <span class="stat-number" id="monthIncome">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">本月支出</span>
+                    <span class="stat-number" id="monthExpense">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">结余</span>
+                    <span class="stat-number" id="monthBalance">0</span>
+                </div>
             </div>
-            <p>Click to get data</p>
-            <form class="row" id="greet-form">
-                <input id="greet-input" placeholder="Enter a name..." />
-                <button type="submit" id="getdata">GET DATA</button>
-            </form>
-            <div class="functions">
-                <a href="./book.html" target="_self">跳转到book.html</a>
-                <a
-                    href="https://www.baidu.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    >跳到百度blank
-                </a>
-                <a
-                    href="https://www.baidu.com"
-                    target="_self"
-                    rel="noopener noreferrer"
-                >
-                    跳到百度self
-                </a>
-                <button onclick="sayHello()">点击我</button>
-                <button onclick="sayHello()">下载文件</button>
-                <button onclick="sayHello()">上传文件</button>
-                <button onclick="sayHello()">访问相机</button>
-                <button onclick="sayHello()">访问麦克风</button>
-                <button onclick="sayHello()">访问相册</button>
-                <button class="btn" onclick="openWechat()">打开微信</button>
-                <button class="btn" onclick="openWechatScan()">
-                    打开扫一扫
-                </button>
-                <button class="btn" onclick="openZhihu()">打开知乎</button>
-                <button onclick="sayHello()">打开抖音</button>
-                <button onclick="sayHello()">用浏览器打开</button>
-                <button>打开知乎</button>
-            </div>
-            <p id="greet-msg"></p>
-            <img src="./static/image/cursor.jpeg" alt="logo" />
-            <video
-                src="https://hk.gh-proxy.org/https://github.com/Sjj1024/PakePlus/blob/main/docs/static/videos/pakeplus.mp4"
-                autoplay
-                controls
-                style="width: 100%; height: 100%"
-            ></video>
-            <audio src="./static/music/yin.mp3" controls></audio>
-        </main>
-    </body>
+        </div>
+    </div>
+
+    <!-- 快速添加按钮（打开抽屉） -->
+    <div class="quick-add">
+        <span>记一笔新账</span>
+        <button class="add-btn" id="showAddDrawer">+</button>
+    </div>
+
+    <!-- 分类筛选 -->
+    <div class="filter-row" id="filterRow">
+        <span class="filter-chip active" data-filter="all">全部</span>
+        <span class="filter-chip" data-filter="餐饮">🍜 餐饮</span>
+        <span class="filter-chip" data-filter="购物">🛍️ 购物</span>
+        <span class="filter-chip" data-filter="交通">🚗 交通</span>
+        <span class="filter-chip" data-filter="娱乐">🎮 娱乐</span>
+        <span class="filter-chip" data-filter="工资">💼 工资</span>
+        <span class="filter-chip" data-filter="其他">📦 其他</span>
+    </div>
+
+    <!-- 列表标题 + 清除全部 -->
+    <div class="list-header">
+        <h3>📋 交易记录</h3>
+        <button class="clear-btn" id="clearAllBtn">清除全部</button>
+    </div>
+
+    <!-- 交易列表容器 -->
+    <ul class="transactions-list" id="transactionList">
+        <!-- 动态渲染 -->
+    </ul>
+
+    <!-- 脚注提示本地存储 -->
+    <div class="footer-note">
+        ⚡ 数据自动保存本地 · 只有你能看到
+    </div>
+</div>
+
+<!-- 新增/编辑抽屉 overlay -->
+<div class="overlay" id="drawerOverlay">
+    <div class="drawer">
+        <h2 id="drawerTitle">📝 新建账单</h2>
+        <!-- 收支切换 -->
+        <div class="type-toggle" id="typeToggle">
+            <button class="type-btn active" id="expenseTypeBtn" data-type="expense">💸 支出</button>
+            <button class="type-btn" id="incomeTypeBtn" data-type="income">💰 收入</button>
+        </div>
+
+        <!-- 金额 -->
+        <div class="input-field">
+            <label>金额 (¥)</label>
+            <input type="number" id="amountInput" placeholder="0.00" min="0.01" step="0.01">
+        </div>
+
+        <!-- 分类 -->
+        <div class="input-field">
+            <label>分类</label>
+            <select id="categorySelect">
+                <option value="餐饮">🍜 餐饮</option>
+                <option value="购物">🛍️ 购物</option>
+                <option value="交通">🚗 交通</option>
+                <option value="娱乐">🎮 娱乐</option>
+                <option value="工资">💼 工资</option>
+                <option value="其他">📦 其他</option>
+            </select>
+        </div>
+
+        <!-- 描述 (可选) -->
+        <div class="input-field">
+            <label>备注 (可选)</label>
+            <input type="text" id="descInput" placeholder="例如: 午餐 / 滴滴...">
+        </div>
+
+        <!-- 按钮组 -->
+        <div class="drawer-actions">
+            <button id="cancelDrawer">取消</button>
+            <button class="primary" id="saveTransaction">保存</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ---------- 存储KEY ----------
+        const STORAGE_KEY = 'local_account_book_app';
+
+        // ---------- 全局数据 ----------
+        let transactions = [];          // 所有交易 { id, amount, type, category, description, date }
+        let currentFilter = 'all';       // 当前选中的分类筛选
+
+        // ---------- DOM 元素 ----------
+        const totalBalanceEl = document.getElementById('totalBalance');
+        const monthIncomeEl = document.getElementById('monthIncome');
+        const monthExpenseEl = document.getElementById('monthExpense');
+        const monthBalanceEl = document.getElementById('monthBalance');
+        const transactionListEl = document.getElementById('transactionList');
+        const filterChips = document.querySelectorAll('.filter-chip');
+        const overlay = document.getElementById('drawerOverlay');
+        const drawerTitle = document.getElementById('drawerTitle');
+        const expenseTypeBtn = document.getElementById('expenseTypeBtn');
+        const incomeTypeBtn = document.getElementById('incomeTypeBtn');
+        const amountInput = document.getElementById('amountInput');
+        const categorySelect = document.getElementById('categorySelect');
+        const descInput = document.getElementById('descInput');
+        const cancelBtn = document.getElementById('cancelDrawer');
+        const saveBtn = document.getElementById('saveTransaction');
+        const showAddBtn = document.getElementById('showAddDrawer');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+
+        // 当前编辑状态 (新增模式不设置editId)
+        let editId = null;
+
+        // ---------- 初始化 / 加载本地数据 ----------
+        function loadFromStorage() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    transactions = JSON.parse(stored);
+                } catch (e) {
+                    transactions = [];
+                }
+            } else {
+                // 放几条示例数据方便预览
+                const today = new Date();
+                const ymd = (d) => d.toISOString().slice(0,10);
+                transactions = [
+                    { id: Date.now() - 10000, amount: 3200, type: 'income', category: '工资', description: '工资入账', date: ymd(today) },
+                    { id: Date.now() - 20000, amount: 48, type: 'expense', category: '餐饮', description: '午餐', date: ymd(today) },
+                    { id: Date.now() - 150000, amount: 199, type: 'expense', category: '购物', description: '耳机', date: ymd(new Date(today.setDate(today.getDate()-1))) },
+                ];
+            }
+        }
+
+        // 保存至本地
+        function saveToStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+        }
+
+        // ---------- 辅助函数：本月统计 ----------
+        function getThisMonthRange() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            const firstDay = new Date(year, month, 1).toISOString().slice(0,10);
+            const lastDay = new Date(year, month + 1, 0).toISOString().slice(0,10);
+            return { firstDay, lastDay };
+        }
+
+        // 更新头部卡片：总余额，本月收支
+        function updateBalanceStats() {
+            // 总余额 (所有收入 - 所有支出)
+            let total = 0;
+            transactions.forEach(t => {
+                total += (t.type === 'income' ? t.amount : -t.amount);
+            });
+            totalBalanceEl.textContent = total.toFixed(2);
+
+            // 本月统计
+            const { firstDay, lastDay } = getThisMonthRange();
+            let monthIncome = 0, monthExpense = 0;
+            transactions.forEach(t => {
+                if (t.date >= firstDay && t.date <= lastDay) {
+                    if (t.type === 'income') monthIncome += t.amount;
+                    else monthExpense += t.amount;
+                }
+            });
+            monthIncomeEl.textContent = '¥' + monthIncome.toFixed(2);
+            monthExpenseEl.textContent = '¥' + monthExpense.toFixed(2);
+            monthBalanceEl.textContent = '¥' + (monthIncome - monthExpense).toFixed(2);
+        }
+
+        // 渲染交易列表（根据currentFilter筛选）
+        function renderList() {
+            let filtered = transactions;
+            if (currentFilter !== 'all') {
+                filtered = transactions.filter(t => t.category === currentFilter);
+            }
+            // 按日期倒序（最新的在前面）
+            const sorted = [...filtered].sort((a,b) => (a.date > b.date ? -1 : (a.date < b.date ? 1 : 0)));
+
+            if (sorted.length === 0) {
+                transactionListEl.innerHTML = `<div class="empty-state">📭 没有记账记录<br>点击“+”添加一笔</div>`;
+                return;
+            }
+
+            let html = '';
+            sorted.forEach(tx => {
+                const icon = tx.category === '餐饮' ? '🍜' :
+                             tx.category === '购物' ? '🛍️' :
+                             tx.category === '交通' ? '🚗' :
+                             tx.category === '娱乐' ? '🎮' :
+                             tx.category === '工资' ? '💼' : '📦';
+                const sign = tx.type === 'income' ? '+' : '-';
+                const amountClass = tx.type === 'income' ? 'income' : 'expense';
+                const amountDisplay = sign + '¥' + tx.amount.toFixed(2);
+                // 转义描述防止XSS，但这里我们信任本地数据
+                const desc = tx.description ? tx.description : (tx.type === 'income' ? '收入' : '支出');
+                html += `<li data-id="${tx.id}">
+                    <div class="tx-left">
+                        <div class="tx-cat-icon">${icon}</div>
+                        <div class="tx-info">
+                            <span class="tx-desc">${desc}</span>
+                            <span class="tx-cat">${tx.category}</span>
+                        </div>
+                    </div>
+                    <div class="tx-right">
+                        <span class="tx-amount ${amountClass}">${amountDisplay}</span>
+                        <span class="tx-date">${tx.date}</span>
+                    </div>
+                    <button class="delete-tx" data-id="${tx.id}" aria-label="删除">✕</button>
+                </li>`;
+            });
+            transactionListEl.innerHTML = html;
+
+            // 给所有删除按钮绑定事件
+            document.querySelectorAll('.delete-tx').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = Number(btn.dataset.id);
+                    deleteTransaction(id);
+                });
+            });
+
+            // 也可以给每行绑定点击编辑 (双击或者点击进入编辑，为了演示 点击条目即编辑)
+            document.querySelectorAll('.transactions-list li').forEach(li => {
+                li.addEventListener('click', (e) => {
+                    // 如果点击的是删除按钮内部，忽略
+                    if (e.target.classList.contains('delete-tx')) return;
+                    const id = Number(li.dataset.id);
+                    openEditDrawer(id);
+                });
+            });
+        }
+
+        // 删除单条
+        function deleteTransaction(id) {
+            transactions = transactions.filter(t => t.id !== id);
+            saveToStorage();
+            updateBalanceStats();
+            renderList();
+        }
+
+        // 清除全部记录
+        function clearAllTransactions() {
+            if (transactions.length === 0) return;
+            if (confirm('确定要删除所有记账记录吗？')) {
+                transactions = [];
+                saveToStorage();
+                updateBalanceStats();
+                renderList();
+            }
+        }
+
+        // 打开抽屉(新增)
+        function openAddDrawer() {
+            editId = null;
+            drawerTitle.innerText = '📝 新建账单';
+            amountInput.value = '';
+            descInput.value = '';
+            categorySelect.value = '餐饮';
+            // 默认支出高亮
+            setActiveType('expense');
+            overlay.style.display = 'flex';
+        }
+
+        // 打开编辑抽屉
+        function openEditDrawer(id) {
+            const tx = transactions.find(t => t.id === id);
+            if (!tx) return;
+            editId = id;
+            drawerTitle.innerText = '✏️ 编辑账单';
+            amountInput.value = tx.amount;
+            descInput.value = tx.description || '';
+            categorySelect.value = tx.category;
+            setActiveType(tx.type);
+            overlay.style.display = 'flex';
+        }
+
+        // 设置收支类型按钮样式
+        function setActiveType(type) {
+            if (type === 'expense') {
+                expenseTypeBtn.classList.add('active');
+                incomeTypeBtn.classList.remove('active');
+            } else {
+                incomeTypeBtn.classList.add('active');
+                expenseTypeBtn.classList.remove('active');
+            }
+        }
+
+        // 关闭抽屉
+        function closeDrawer() {
+            overlay.style.display = 'none';
+            editId = null;
+        }
+
+        // 保存交易 (新增或编辑)
+        function saveTransaction() {
+            // 获取当前选中的类型
+            const type = expenseTypeBtn.classList.contains('active') ? 'expense' : 'income';
+            const amount = parseFloat(amountInput.value);
+            if (isNaN(amount) || amount <= 0) {
+                alert('请输入合法的金额 (>0)');
+                return;
+            }
+            const category = categorySelect.value;
+            const description = descInput.value.trim() || (type === 'income' ? '收入' : '支出');
+            const today = new Date().toISOString().slice(0,10);  // YYYY-MM-DD
+
+            if (editId) {
+                // 编辑
+                const index = transactions.findIndex(t => t.id === editId);
+                if (index !== -1) {
+                    transactions[index] = {
+                        ...transactions[index],
+                        amount,
+                        type,
+                        category,
+                        description,
+                        // 保留原日期不变? 一般编辑保留原日期，但为了方便演示，保持原来日期，也可以改为今日，但为了真实保留原日期
+                        // 但编辑通常不改变日期，我们保留原日期
+                        date: transactions[index].date,
+                    };
+                }
+            } else {
+                // 新增
+                const newTx = {
+                    id: Date.now() + Math.floor(Math.random()*1000),
+                    amount,
+                    type,
+                    category,
+                    description,
+                    date: today,
+                };
+                transactions.push(newTx);
+            }
+
+            saveToStorage();
+            closeDrawer();
+            updateBalanceStats();
+            renderList();
+        }
+
+        // 更新filter样式及数据
+        function setFilter(filterValue) {
+            currentFilter = filterValue;
+            filterChips.forEach(chip => {
+                const chipFilter = chip.dataset.filter;
+                if (chipFilter === filterValue) {
+                    chip.classList.add('active');
+                } else {
+                    chip.classList.remove('active');
+                }
+            });
+            renderList();
+        }
+
+        // ---------- 事件绑定 ----------
+        // 筛选点击
+        filterChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                const filter = chip.dataset.filter;
+                setFilter(filter);
+            });
+        });
+
+        // 显示新增抽屉
+        showAddBtn.addEventListener('click', openAddDrawer);
+
+        // 取消/关闭
+        cancelBtn.addEventListener('click', closeDrawer);
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeDrawer();
+        });
+
+        // 保存按钮
+        saveBtn.addEventListener('click', saveTransaction);
+
+        // 类型切换
+        expenseTypeBtn.addEventListener('click', () => setActiveType('expense'));
+        incomeTypeBtn.addEventListener('click', () => setActiveType('income'));
+
+        // 清除全部
+        clearAllBtn.addEventListener('click', clearAllTransactions);
+
+        // 初始化数据
+        loadFromStorage();
+        updateBalanceStats();
+        renderList();
+
+        // 每次重新渲染list (删除后render已经包含)
+        // 监听存储？不需要，只有本标签页操作。
+    })();
+</script>
+</body>
 </html>
